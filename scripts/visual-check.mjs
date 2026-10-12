@@ -80,6 +80,18 @@ function normalize(entry, noAuth) {
   return noAuth ? { ...e, auth: false } : e;
 }
 
+// Bundled Chromium first; if Playwright ships none for this OS (e.g. macOS 13 since 1.64), fall back to
+// the installed Google Chrome. PW_CHANNEL=chrome forces the fallback.
+async function launchBrowser() {
+  if (process.env.PW_CHANNEL) return chromium.launch({ channel: process.env.PW_CHANNEL });
+  try {
+    return await chromium.launch();
+  } catch (err) {
+    console.error(`bundled chromium unavailable (${err.message.split("\n")[0]}), using installed Chrome`);
+    return chromium.launch({ channel: "chrome" });
+  }
+}
+
 async function newContext(browser) {
   return browser.newContext({
     viewport: VIEWPORT,
@@ -155,7 +167,7 @@ async function main() {
 
   await waitForServer(args.base);
 
-  const browser = await chromium.launch();
+  const browser = await launchBrowser();
   const results = [];
   try {
     const authed = await newContext(browser);

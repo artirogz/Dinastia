@@ -1,0 +1,58 @@
+{
+  "name": "family-dynasty",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && cp -R .next/static .next/standalone/.next/ && cp -R public .next/standalone/",
+    "start": "dotenv -e .env.local -- node .next/standalone/server.js",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env.local -- tsx src/db/migrate.ts",
+    "content:import": "dotenv -e .env.local -- tsx scripts/import-content.ts",
+    "worker": "dotenv -e .env.local -- tsx src/worker/index.ts",
+    "build:server": "esbuild worker/index=src/worker/index.ts db/migrate=src/db/migrate.ts scripts/import-content=scripts/import-content.ts scripts/admin=scripts/admin.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outdir=dist"
+  },
+  "dependencies": {
+    "@tma.js/sdk-react": "^3.0.23",
+    "drizzle-orm": "^0.45.4",
+    "grammy": "^1.46.0",
+    "jose": "^6.2.12",
+    "next": "16.4.0",
+    "pg-boss": "^12.37.1",
+    "pino": "^10.4.0",
+    "postgres": "^3.4.9",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^5.0.4",
+    "dotenv-cli": "^11.0.0",
+    "drizzle-kit": "^0.31.11",
+    "esbuild": "^0.28.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.4"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true
+  }
+}

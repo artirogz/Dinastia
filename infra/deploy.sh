@@ -66,7 +66,7 @@ run_smoke() {
   local artifact="$ROOT/infra/.last-smoke.txt"
   {
     echo "# smoke $(date -u +%Y-%m-%dT%H:%M:%SZ) base=${BASE_URL} release=${APP_IMAGE:-unknown}"
-    docker run --rm -v "$ROOT/scripts:/scripts:ro" node:22-alpine node /scripts/smoke.mjs "$BASE_URL"
+    docker run --rm -v "$ROOT/scripts:/scripts:ro" node:24-alpine node /scripts/smoke.mjs "$BASE_URL"
   } 2>&1 | tee "$artifact"
   # tee hides the exit code of the smoke run; read it from PIPESTATUS.
   return "${PIPESTATUS[0]}"

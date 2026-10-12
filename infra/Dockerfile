@@ -7,7 +7,7 @@
 #
 # Claude: before relying on this file verify against current docs
 #   - Next.js "output: standalone" layout (server.js location, what must be copied by hand)
-#   - Node 22 alpine image tag
+#   - Node 24 alpine image tag
 # and keep `next.config.ts` in sync (output: "standalone").
 #
 # Packaging contract (one rule for every process in the image):
@@ -27,11 +27,11 @@
 #   build:server  esbuild worker/index=src/worker/index.ts db/migrate=src/db/migrate.ts
 #                 scripts/import-content=scripts/import-content.ts scripts/admin=scripts/admin.ts
 #                 --bundle --platform=node --format=esm
-#                 --target=node22 --packages=external --outdir=dist
+#                 --target=node24 --packages=external --outdir=dist
 #                 named entry points ("out=in") give exactly the paths compose calls:
 #                   dist/worker/index.js, dist/db/migrate.js, dist/scripts/import-content.js
 
-ARG NODE_VERSION=22
+ARG NODE_VERSION=24
 
 # ---------- deps: full install for the build, cached on package files only ----------
 FROM node:${NODE_VERSION}-alpine AS deps

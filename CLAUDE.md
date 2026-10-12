@@ -81,17 +81,21 @@ query-параметра не принимается никогда.
 **Секреты только в `.env`.** Токен бота, ключи ЮKassa, ключ видеохостинга, строка подключения к базе.
 В код не попадают, в git не коммитятся.
 
-## Команды (появятся после `start-project`)
+## Команды
 
 ```bash
-npm run dev                 # мини-апп локально, вход через /api/dev/login
+colima start                # Docker на этом Mac (macOS 13: Colima вместо OrbStack), после перезагрузки
+docker compose -f infra/docker-compose.dev.yml up -d   # Postgres 16 на localhost:5432
+npm run dev                 # мини-апп локально; вход через /api/dev/login появится на M2
 npm test                    # vitest
-npm run typecheck           # tsc --noEmit
+npm run typecheck           # next typegen + tsc --noEmit
+npm run lint                # eslint
 npm run db:generate         # drizzle-kit: миграция из schema.ts
 npm run db:migrate          # применить миграции из ./drizzle
+npm run worker              # воркер локально (tsx)
 npm run build:server        # esbuild: worker, migrate, import-content, admin → dist/
-npm run content:import      # content/courses → база
-node scripts/visual-check.mjs           # скриншоты всех экранов в design/visual-check/
+npm run content:import      # content/courses → база (с M3)
+node scripts/visual-check.mjs           # скриншоты экранов в design/visual-check/ (на macOS 13 через установленный Chrome)
 node scripts/smoke.mjs https://<домен>  # проверка живого прода
 ```
 

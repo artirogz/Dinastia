@@ -1,0 +1,21 @@
+CREATE TABLE "users" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"tg_id" bigint NOT NULL,
+	"first_name" text,
+	"last_name" text,
+	"username" text,
+	"photo_url" text,
+	"language_code" text,
+	"role" text DEFAULT 'user' NOT NULL,
+	"consent_at" timestamp with time zone,
+	"consent_version" text,
+	"marketing_consent_at" timestamp with time zone,
+	"marketing_opt_out_at" timestamp with time zone,
+	"bot_blocked_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"last_seen_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"anonymized_at" timestamp with time zone,
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "users_tg_id_unique" UNIQUE("tg_id"),
+	CONSTRAINT "users_role_check" CHECK ("users"."role" in ('user', 'admin'))
+);

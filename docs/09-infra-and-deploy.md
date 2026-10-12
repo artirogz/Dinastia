@@ -173,7 +173,7 @@ smoke, пишет причину в `infra/.release/failed` и завершае�
 
 - маршрут `GET /api/health` (200, если жива база);
 - скрипт `build:server` в `package.json`, ровно такой:
-  `esbuild worker/index=src/worker/index.ts db/migrate=src/db/migrate.ts scripts/import-content=scripts/import-content.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outdir=dist`.
+  `esbuild worker/index=src/worker/index.ts db/migrate=src/db/migrate.ts scripts/import-content=scripts/import-content.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outdir=dist`.
   Входы заданы парами «выход=вход», поэтому файлы получаются ровно там, где их зовут compose и этот
   документ: `dist/worker/index.js`, `dist/db/migrate.js`, `dist/scripts/import-content.js` (вариант
   `--outbase=.` дал бы `dist/src/worker/index.js`). В бандлы попадает только наш код, npm-пакеты остаются
