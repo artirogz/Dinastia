@@ -1,0 +1,24 @@
+# dependencies and build
+node_modules/
+.next/
+dist/
+coverage/
+
+# environment: only the example is tracked
+.env
+.env.*
+!infra/.env.example
+
+# server-side artifacts
+infra/.release/
+infra/.last-smoke.txt
+/data/
+/backups/
+
+# local tooling
+.DS_Store
+*.log
+playwright-report/
+test-results/
+
+# screenshots are evidence and ARE tracked: design/visual-check/**/*.png

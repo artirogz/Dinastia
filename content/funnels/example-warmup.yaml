@@ -1,0 +1,27 @@
+# Demo warm-up chain. Format reference: docs/06-bot-and-funnels.md section 5.
+# Nothing is sent from here by itself: a chain starts only when the user opts in through the bot
+# (deep link warmup-example-warmup) or when an admin runs /funnel start.
+slug: example-warmup
+title: Прогрев «Пример»
+course: example-course        # the course this chain sells; buying it stops the chain
+steps:
+  - id: welcome
+    delay: 0
+    text: |
+      Привет, {first_name}! Это первое сообщение цепочки.
+      Остановить рассылку можно командой /stop.
+    buttons:
+      - { text: "Открыть приложение", action: open_app }
+  - id: day-2
+    delay: 1d
+    text: |
+      Прошли сутки. Вот что внутри курса: два урока, конспекты и задание.
+    buttons:
+      - { text: "Подробнее", url: "https://example.com/course" }
+  - id: day-3
+    delay: 1d12h
+    text: |
+      Курс открыт. Запись в приложении, оплата картой или СБП.
+    buttons:
+      - { text: "Купить курс", action: buy, course: example-course }
+      - { text: "Больше не писать", action: stop }

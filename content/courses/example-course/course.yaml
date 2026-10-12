@@ -1,0 +1,19 @@
+# Demo course. Used by the screens (M1) and by tests; replace with real content later.
+# Format reference: content/README.md. Import: npm run content:import (idempotent by slug).
+slug: example-course
+title: Пример курса
+subtitle: Две короткие лекции для проверки экранов
+description: |
+  Короткий курс из двух уроков. Нужен, чтобы собрать и проверить экраны приложения на живых данных.
+cover: cover.png           # optional; file next to this yaml (missing file = warning, no cover)
+price_minor: 490000        # 4 900.00 RUB, price in kopecks
+access_days: null          # null = lifetime access (open question Q7)
+unlock_mode: all           # all | sequential (open question Q8)
+status: published          # draft | published
+
+# Order in the list = order on the screen.
+modules:
+  - slug: start
+    title: Начало
+  - slug: practice
+    title: Практика

@@ -1,0 +1,30 @@
+# Local development: Postgres only, bound to localhost.
+# The app itself runs on the host with `npm run dev`.
+#
+#   docker compose -f infra/docker-compose.dev.yml up -d
+#   DATABASE_URL=postgres://courses:courses@localhost:5432/courses
+#
+# Claude: verify the image tag against current Postgres docs.
+
+name: courses-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: courses
+      POSTGRES_PASSWORD: courses
+      POSTGRES_DB: courses
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U courses -d courses"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata_dev:

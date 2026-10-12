@@ -1,0 +1,25 @@
+# Build context for infra/Dockerfile (context = repository root).
+# node_modules must stay out: the build stage copies sources on top of the deps stage.
+node_modules
+**/node_modules
+.next
+dist
+coverage
+.git
+.claude
+design
+docs
+tests
+playwright-report
+test-results
+data
+backups
+
+# secrets and server state never enter an image
+**/.env*
+infra/.release
+infra/.last-smoke.txt
+
+# markdown is documentation; the content folder is the exception (lessons are markdown)
+**/*.md
+!content/**

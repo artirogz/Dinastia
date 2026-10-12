@@ -1,0 +1,51 @@
+# One site. Caddy obtains and renews the TLS certificate by itself (needs ports 80 and 443 open
+# and a DNS A record for app.{$DOMAIN} pointing at this server).
+#
+# Claude: verify directive names against current Caddy docs before changing anything
+# (reverse_proxy, header, log filters). Test with: docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile
+
+{
+	email {$ACME_EMAIL}
+}
+
+app.{$DOMAIN} {
+	encode zstd gzip
+
+	# Telegram Web embeds Mini Apps in an iframe, so X-Frame-Options must not be set.
+	# frame-ancestors lists the Telegram web clients; confirm the current list in Telegram docs.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "frame-ancestors 'self' https://web.telegram.org https://webk.telegram.org https://webz.telegram.org"
+		-Server
+	}
+
+	# Alias kept for the architecture diagram: the real route is /api/tg/webhook
+	@tgalias path /tg/webhook
+	handle @tgalias {
+		rewrite * /api/tg/webhook
+		reverse_proxy web:3000
+	}
+
+	handle {
+		# Caddy overwrites X-Forwarded-For for clients it does not trust, so the payment
+		# webhook can rely on the first address in that header (see docs/04-payments-yookassa.md).
+		reverse_proxy web:3000 {
+			health_uri /api/health
+			health_interval 15s
+		}
+	}
+
+	# JSON access log to stdout (docker logs, rotated by the logging driver).
+	# One-time login links carry a token in the query string: never log it.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			request>uri query {
+				delete token
+			}
+		}
+	}
+}

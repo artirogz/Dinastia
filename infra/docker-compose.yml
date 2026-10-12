@@ -1,0 +1,129 @@
+# Production stack: caddy + web + worker + postgres + one-shot migrate.
+# Run from the repository root:
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
+# Normally invoked through infra/deploy.sh, which also sets APP_IMAGE to an immutable tag.
+# Without APP_IMAGE (backup.sh, restore.sh, `logs`, `ps`) the default courses-app:current is used;
+# deploy.sh keeps that tag pointing at the release that is running.
+#
+# Claude: verify compose file syntax and image tags against current Docker / Caddy / Postgres docs.
+
+name: courses
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+# Only caddy is attached to a network with published ports.
+# backend is internal: postgres has no route to the internet and nothing outside can reach it.
+networks:
+  edge:      # caddy <-> web
+  backend:   # web, worker, migrate <-> postgres
+    internal: true
+  egress:    # worker needs outbound access (Telegram API, YooKassa, video provider API)
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in infra/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in infra/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    depends_on:
+      web:
+        condition: service_healthy
+    logging: *default-logging
+
+  web:
+    image: ${APP_IMAGE:-courses-app:current}
+    # No `build:` here on purpose: images are built only by infra/deploy.sh (docker build from a worktree
+    # of the release commit). A `docker compose build` would retag courses-app:current with an unchecked build.
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      NODE_ENV: production
+      DEV_LOGIN: "0"
+      MEDIA_ROOT: /data/media
+    volumes:
+      - ${MEDIA_HOST_DIR:-/srv/courses/media}:/data/media
+    networks: [edge, backend, egress]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # /api/health answers 200 after a trivial `select 1`; the route appears at stage M2, see docs/09
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *default-logging
+
+  worker:
+    image: ${APP_IMAGE:-courses-app:current}
+    restart: unless-stopped
+    command: ["node", "dist/worker/index.js"]
+    env_file: [.env]
+    environment:
+      NODE_ENV: production
+      DEV_LOGIN: "0"
+      MEDIA_ROOT: /data/media
+    volumes:
+      - ${MEDIA_HOST_DIR:-/srv/courses/media}:/data/media
+    networks: [backend, egress]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # the worker touches /tmp/worker-heartbeat every 30 s; stale file means a stuck process
+      test: ["CMD-SHELL", "test -n \"$(find /tmp/worker-heartbeat -mmin -2 2>/dev/null)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging: *default-logging
+
+  migrate:
+    image: ${APP_IMAGE:-courses-app:current}
+    restart: "no"
+    command: ["node", "dist/db/migrate.js"]
+    env_file: [.env]
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *default-logging
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in infra/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in infra/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    shm_size: 256mb
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    logging: *default-logging
